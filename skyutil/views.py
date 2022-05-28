@@ -22,7 +22,28 @@ class View(object):
     def list_views(self):
         if os.path.exists(self.views_dir):
             return os.listdir(self.views_dir)
-    
+
+    def _convert_pd_expr_to_arrow(self, expr_list):
+        arrow_expr = ()
+        for expr_tupe in expr_list:
+            field, comparator, value = expr_tupe
+            field = pa_ds.field(field) 
+            if comparator == "=":
+                arrow_expr += (field == value)
+            elif comparator == "!=":
+                arrow_expr += (field != value)
+            elif comparator == ">":
+                arrow_expr += (field > value)
+            elif comparator == ">=":
+                arrow_expr += (field >= value)
+            elif comparator == "<":
+                arrow_expr += (field < value)
+            elif comparator == "<=":
+                arrow_expr += (field <= value)
+            else:
+                raise Exception("Unknown comparator {}".format(comparator))
+        return arrow_expr
+
 
 class StaticView(View):
     def __init__(self, views_dir, dataset_path):
@@ -36,7 +57,7 @@ class StaticView(View):
             if not update:
                 raise Exception("View {} already exists.".format(view_name))
 
-        table = pa_ds.dataset(self.dataset_path).to_table(filter=query)
+        table = pa_ds.dataset(self.dataset_path).to_table(filter=self._convert_pd_expr_to_arrow(query))
         pa_ds.write_dataset(table, os.path.join(self.views_dir, view_name))
         return True
 
@@ -71,4 +92,4 @@ class LazyView(View):
         with open(os.path.join(self.views_dir, view_name), "r") as f:
             query = f.read()
 
-        return pa_ds.dataset(self.dataset_path).to_table(filter=query)
+        return pa_ds.dataset(self.dataset_path).to_table(filter=self._convert_pd_expr_to_arrow(query))
