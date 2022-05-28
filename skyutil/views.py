@@ -23,25 +23,24 @@ class View(object):
         if os.path.exists(self.views_dir):
             return os.listdir(self.views_dir)
 
-    def _convert_pd_expr_to_arrow(self, expr_list):
+    def _convert_pd_expr_to_arrow(self, expr):
         arrow_expr = ()
-        for expr_tupe in expr_list:
-            field, comparator, value = expr_tupe
-            field = pa_ds.field(field) 
-            if comparator == "=":
-                arrow_expr += (field == value)
-            elif comparator == "!=":
-                arrow_expr += (field != value)
-            elif comparator == ">":
-                arrow_expr += (field > value)
-            elif comparator == ">=":
-                arrow_expr += (field >= value)
-            elif comparator == "<":
-                arrow_expr += (field < value)
-            elif comparator == "<=":
-                arrow_expr += (field <= value)
-            else:
-                raise Exception("Unknown comparator {}".format(comparator))
+        field, comparator, value = expr
+        field = pa_ds.field(field) 
+        if comparator == "=":
+            arrow_expr += (field == value)
+        elif comparator == "!=":
+            arrow_expr += (field != value)
+        elif comparator == ">":
+            arrow_expr += (field > value)
+        elif comparator == ">=":
+            arrow_expr += (field >= value)
+        elif comparator == "<":
+            arrow_expr += (field < value)
+        elif comparator == "<=":
+            arrow_expr += (field <= value)
+        else:
+            raise Exception("Unknown comparator {}".format(comparator))
         return arrow_expr
 
 
