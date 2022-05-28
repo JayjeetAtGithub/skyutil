@@ -7,7 +7,7 @@ setuptools.setup(name='skyutil',
                  description='Misc. skyhook utilites',
                  author='Jayjeet Chakraborty',
                  author_email='jayjeetc@ucsc.edu',
-                 py_modules=['skyutil'],
+                 packages=['skyutil'],
                  install_requires=[
                      'pyarrow'
                  ],
