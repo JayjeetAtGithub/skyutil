@@ -1,5 +1,8 @@
 import os
+import json
+
 import pyarrow as pa
+import pyarrow.parquet as pq
 import pyarrow.dataset as pa_ds
 
 
@@ -26,19 +29,20 @@ class View(object):
     def _convert_pd_expr_to_arrow(self, expr):
         arrow_expr = ()
         field, comparator, value = expr
+        print(field, comparator, value)
         field = pa_ds.field(field) 
         if comparator == "=":
-            arrow_expr += (field == value)
+            arrow_expr = (field == value)
         elif comparator == "!=":
-            arrow_expr += (field != value)
+            arrow_expr = (field != value)
         elif comparator == ">":
-            arrow_expr += (field > value)
+            arrow_expr = (field > value)
         elif comparator == ">=":
-            arrow_expr += (field >= value)
+            arrow_expr = (field >= value)
         elif comparator == "<":
-            arrow_expr += (field < value)
+            arrow_expr = (field < value)
         elif comparator == "<=":
-            arrow_expr += (field <= value)
+            arrow_expr = (field <= value)
         else:
             raise Exception("Unknown comparator {}".format(comparator))
         return arrow_expr
@@ -46,7 +50,7 @@ class View(object):
 
 class StaticView(View):
     def __init__(self, views_dir, dataset_path):
-        super.__init__(views_dir, dataset_path)
+        super().__init__(views_dir, dataset_path)
 
     def create(self, query, view_name, update=False):
         if not os.path.exists(self.views_dir):
@@ -57,15 +61,14 @@ class StaticView(View):
                 raise Exception("View {} already exists.".format(view_name))
 
         table = pa_ds.dataset(self.dataset_path).to_table(filter=self._convert_pd_expr_to_arrow(query))
-        pa_ds.write_dataset(table, os.path.join(self.views_dir, view_name))
+        pq.write_table(table, os.path.join(self.views_dir, view_name))
         return True
 
     def get(self, view_name):
         if not os.path.exists(os.path.join(self.views_dir, view_name)):
             raise Exception("View {} does not exist".format(view_name))
 
-        with pa.ipc.RecordBatchFileReader(os.path.join(self.views_dir, view_name)) as reader:
-            return reader.read_all()
+        return pq.read_table(os.path.join(self.views_dir, view_name))
 
 
 class LazyView(View):
@@ -81,7 +84,7 @@ class LazyView(View):
                 raise Exception("View {} already exists.".format(view_name))
         
         with open(os.path.join(self.views_dir, view_name), "w") as f:
-            f.write(query)
+            f.write(json.dumps(query))
         return True
 
     def get(self, view_name):
@@ -89,6 +92,6 @@ class LazyView(View):
             raise Exception("View {} does not exist".format(view_name))
         
         with open(os.path.join(self.views_dir, view_name), "r") as f:
-            query = f.read()
+            query = json.loads(f.read())
 
         return pa_ds.dataset(self.dataset_path).to_table(filter=self._convert_pd_expr_to_arrow(query))
