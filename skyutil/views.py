@@ -8,18 +8,18 @@ class View(object):
         self.views_dir = views_dir
         self.dataset_path = dataset_path
 
-    def create_view(self, query, view_name, update=False):
+    def create(self, query, view_name, update=False):
         raise NotImplementedError("Implement in subclass")
 
-    def get_view(self, view_name):
+    def get(self, view_name):
         raise NotImplementedError("Implement in subclass")
 
-    def delete_view(self, view_name):
+    def delete(self, view_name):
         if not os.path.exists(os.path.join(self.views_dir, view_name)):
             raise Exception("View {} does not exist".format(view_name))
         os.remove(os.path.join(self.views_dir, view_name))
 
-    def list_views(self):
+    def list(self):
         if os.path.exists(self.views_dir):
             return os.listdir(self.views_dir)
 
@@ -48,7 +48,7 @@ class StaticView(View):
     def __init__(self, views_dir, dataset_path):
         super.__init__(self, views_dir, dataset_path)
 
-    def create_view(self, query, view_name, update=False):
+    def create(self, query, view_name, update=False):
         if not os.path.exists(self.views_dir):
             os.makedirs(self.views_dir)
 
@@ -60,7 +60,7 @@ class StaticView(View):
         pa_ds.write_dataset(table, os.path.join(self.views_dir, view_name))
         return True
 
-    def get_view(self, view_name):
+    def get(self, view_name):
         if not os.path.exists(os.path.join(self.views_dir, view_name)):
             raise Exception("View {} does not exist".format(view_name))
 
@@ -72,7 +72,7 @@ class LazyView(View):
     def __init__(self, views_dir, dataset_path):
         super().__init__(self, views_dir, dataset_path)
 
-    def create_view(self, query, view_name, update=False):
+    def create(self, query, view_name, update=False):
         if not os.path.exists(self.views_dir):
             os.makedirs(self.views_dir)
 
@@ -84,7 +84,7 @@ class LazyView(View):
             f.write(query)
         return True
 
-    def get_view(self, view_name):
+    def get(self, view_name):
         if not os.path.exists(os.path.join(self.views_dir, view_name)):
             raise Exception("View {} does not exist".format(view_name))
         
