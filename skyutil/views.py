@@ -46,7 +46,7 @@ class View(object):
 
 class StaticView(View):
     def __init__(self, views_dir, dataset_path):
-        super.__init__(self, views_dir, dataset_path)
+        super.__init__(views_dir, dataset_path)
 
     def create(self, query, view_name, update=False):
         if not os.path.exists(self.views_dir):
@@ -70,7 +70,7 @@ class StaticView(View):
 
 class LazyView(View):
     def __init__(self, views_dir, dataset_path):
-        super().__init__(self, views_dir, dataset_path)
+        super().__init__(views_dir, dataset_path)
 
     def create(self, query, view_name, update=False):
         if not os.path.exists(self.views_dir):
